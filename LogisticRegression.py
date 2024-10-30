@@ -31,7 +31,19 @@ def main():
     X_values = df.iloc[:, df.columns != 'label']
     KFoldCrossValidation(X_values, y_values, 10)
     
+    logistic = Sigmoid(X_training.dot(coeffient.T)
+    costp = (-logistic + np.squeeze(y_training)).T.dot(X_training)
+    y_training = np.squeeze(y_training)
+    coeffient = coeffient + learning_rate * costp
 
+    #likeilywood function y.log(p(xi)-((1-y)(log(1-p(xi)))))
+    lw1 = (y_training *np.log(logistic))
+    lw2 = ((1-y_training)*np.log(1 - logistic))
+    costv = +lw1 + lw2
+
+    # mean of function
+    costf = np.mean(costv)
+    cost.append(costf)
 
 
 
