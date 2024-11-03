@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve
 import matplotlib.pyplot as plt
+from sklearn import linear_model
 
 class LogitRegression():
     def __init__ (self, learning_rate, iterations):
@@ -23,8 +24,9 @@ class LogitRegression():
             self.update_weights(X, y)
         return self
 
+
     def update_weights (self,X,y):
-        sigmoid = 1.0 / (1.0 + np.exp(-(self.X.dot(self.weight) + self.bias) ) )
+        sigmoid = 1.0 / (1.0 + np.exp(-(X.dot(self.weight) + self.bias) ) )
 
         # gradients
         tmp = (sigmoid - self.y.T)
@@ -46,7 +48,7 @@ class LogitRegression():
 
 def main():
     print("Welcome to Logistic Regression")
-    file_name = "C:\\Users\\rlars\\OneDrive\\Desktop\\MachineLearning\\Assignments\\HW4\\CS4210_MachineLearning\\DATA.csv"
+    file_name = "\\MNIST_CV.csv"
     df = pd.read_csv(file_name)
     
     #Split into Features(X) and Labels(y)
@@ -56,42 +58,67 @@ def main():
 
     print(X_values)
     print(y_values)
-
-    scaler = StandardScaler()
-    X_values = scaler.fit_transform(X_values)
-
+    
     kfold = KFold(n_splits=10, shuffle =True, random_state=42)
-    tpr_list = []
-    fpr_list = []
-
+    tpr_list1 = []
+    fpr_list1 = []
+    
+    '''
+    tpr_list2 = []
+    fpr_list2 = []
+    '''
+    #Using Scikit-learn's KFold-Cross Validation 
     for fold, (training_index, testing_index) in enumerate(kfold.split(X_values), 1):
         X_train, X_test = X_values[training_index], X_values[testing_index]
         Y_train, Y_test = y_values[training_index], y_values[testing_index]
-        model = LogitRegression(learning_rate= 0.001, iterations= 1000)
-        model.fit(X_train, Y_train)
-        Y_probability = model.predict_probability(X_test)
+        #Testing my model
+        model1 = LogitRegression(learning_rate= 0.000001, iterations= 100)
+        model1.fit(X_train, Y_train)
+        Y_probability1 = model1.predict_probability(X_test)
 
-        # calculates TPR and FPR at multiple thresholds 
-        # using scikit-learn's roc_curve function  
-        fpr, tpr, _ = roc_curve(Y_test, Y_probability)
+        fpr1, tpr1, _ = roc_curve(Y_test, Y_probability1)
+        tpr_list1.append(np.interp(np.linspace(0, 1, 100), fpr1, tpr1))
+        fpr_list1.append(np.linspace(0, 1, 100))
+        
+        '''
+        model2 = linear_model.LogisticRegression()
+        model2.fit(X_train, Y_train)
+        Y_probability2 = model2.predict(X_test)
+        
+        fpr2, tpr2, _ = roc_curve(Y_test, Y_probability2)
+        tpr_list2.append(np.interp(np.linspace(0, 1, 100), fpr2, tpr2))
+        fpr_list2.append(np.linspace(0, 1, 100))
+        '''
 
-        tpr_list.append(np.interp(np.linspace(0, 1, 100), fpr, tpr))
-        fpr_list.append(np.linspace(0, 1, 100))
-
-    tpr_dataFrame = pd.DataFrame(tpr_list)
-    print(tpr_dataFrame)
-    fpr_dataFrame = pd.DataFrame(fpr_list)
-    print(fpr_dataFrame)
-    mean_tpr = np.mean(tpr_list, axis=0)
+    tpr_dataFrame1 = pd.DataFrame(tpr_list1)
+    print(tpr_dataFrame1)
+    fpr_dataFrame1 = pd.DataFrame(fpr_list1)
+    print(fpr_dataFrame1)
     
-    mean_fpr = np.mean(fpr_list, axis=0)
-    plt.plot(mean_fpr, mean_tpr, label=f"ROC Curve (AUC = {np.trapz(mean_tpr, mean_fpr):.2f})")
+    mean_tpr1 = np.mean(tpr_list1, axis=0)
+    mean_fpr1 = np.mean(fpr_list1, axis=0)
+    plt.plot(mean_fpr1, mean_tpr1, label=f"ROC Curve (AUC = {np.trapz(mean_tpr1, mean_fpr1):.2f})")
     plt.xlabel("False Positive Rate (FPR)")
     plt.ylabel("True Positive Rate (TPR)")
     plt.title("Average ROC Curve from 10-Fold Cross-Validation")
     plt.legend()
     plt.show()
 
+    '''
+    tpr_dataFrame2 = pd.DataFrame(tpr_list2)
+    print(tpr_dataFrame2)
+    fpr_dataFrame2 = pd.DataFrame(fpr_list2)
+
+    mean_tpr2 = np.mean(tpr_list2, axis=0)
+    
+    mean_fpr2 = np.mean(fpr_list2, axis=0)
+    plt.plot(mean_fpr2, mean_tpr2, label=f"ROC Curve (AUC = {np.trapz(mean_tpr2, mean_fpr2):.2f})")
+    plt.xlabel("False Positive Rate (FPR)")
+    plt.ylabel("True Positive Rate (TPR)")
+    plt.title("Average ROC Curve from 10-Fold Cross-Validation")
+    plt.legend()
+    plt.show()
+    '''
 
 if __name__ == "__main__":
     main()
